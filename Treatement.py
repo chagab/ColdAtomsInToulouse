@@ -1,3 +1,7 @@
+########################################################################
+## Program writen by Gabriel Chatelain at laboratory LCAR in Toulouse ##
+########################################################################
+
 from pylab import *
 from os import listdir
 from re import search
