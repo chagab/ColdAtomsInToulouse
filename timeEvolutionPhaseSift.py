@@ -1,5 +1,5 @@
-from pylab import *
-ion()
+import pylab as py
+py.ion()
 
 
 class timeEvolutionPhaseShift():
@@ -20,13 +20,13 @@ class timeEvolutionPhaseShift():
     ordreMax = 10
     ordreMaxPlot = 3
     # position range
-    x = arange(-Ns / 2, Ns / 2 + dx, dx)
+    x = py.arange(-Ns / 2, Ns / 2 + dx, dx)
     # momentum range
-    k = arange(-ordreMax, ordreMax + dk, dk)
+    k = py.arange(-ordreMax, ordreMax + dk, dk)
     # quasimomentum range
-    q = arange(-0.5, 0.5 + 0.1, 0.1)
+    q = py.arange(-0.5, 0.5 + 0.1, 0.1)
     # fourier coefficients indexes
-    m = arange(int(-(M - 1) / 2), int((M - 1) / 2) + 1)
+    m = py.arange(int(-(M - 1) / 2), int((M - 1) / 2) + 1)
 
     def __init__(self, s0=10, angle=25, Texp=40e-6, nstep=40):
         # optical lattice depth
@@ -40,21 +40,21 @@ class timeEvolutionPhaseShift():
         # time step
         self.dt = 1 / nstep
         # time range
-        self.t = arange(0, self.tmax + self.dt / 2, self.dt)[newaxis, :]
+        self.t = py.arange(0, self.tmax + self.dt / 2, self.dt)[py.newaxis, :]
 
     def computeBandStructure(self):
         bandsIndex = range(self.M)
         bands = {}
         for i in bandsIndex:
-            bands[i] = zeros((len(self.q)))
+            bands[i] = py.zeros((len(self.q)))
 
-        H2 = diag((self.M - 1) * [self.Vq], 1)
-        H3 = diag((self.M - 1) * [self.Vq], -1)
+        H2 = py.diag((self.M - 1) * [self.Vq], 1)
+        H3 = py.diag((self.M - 1) * [self.Vq], -1)
 
         for i, q in enumerate(self.q):
-            H1 = diag((q - self.m)**2)
+            H1 = py.diag((q - self.m)**2)
             H = H1 + H2 + H3
-            Eq, Cq = eigh(H)
+            Eq, Cq = py.eigh(H)
             Eq = (Eq + self.s / 2) * self.nu_L / 4
             for j in bandsIndex:
                 bands[j][i] = Eq[j]
@@ -64,33 +64,34 @@ class timeEvolutionPhaseShift():
         # compute the Bloch functions at the center of the Brillouin zone
         q = 0
         # construct the Bloch Hamiltonian
-        H1 = diag((q - self.m)**2)
-        H2 = diag((self.M - 1) * [self.Vq], 1)
-        H3 = diag((self.M - 1) * [self.Vq], -1)
+        H1 = py.diag((q - self.m)**2)
+        H2 = py.diag((self.M - 1) * [self.Vq], 1)
+        H3 = py.diag((self.M - 1) * [self.Vq], -1)
         H = H1 + H2 + H3
         # compute the eigenfunctions and eigenenergies
-        Eq, Cq = eigh(H)
+        Eq, Cq = py.eigh(H)
         # normalize eigenenergies with respect to nu_L
         Eq = (Eq + self.s / 2) * self.nu_L / 4
         self.Eq = Eq
         self.Cq = Cq
         # the omegas are
-        self.omegas = (Eq * 2 * pi * self.Texp)[:, newaxis]
+        self.omegas = (Eq * 2 * py.pi * self.Texp)[:, py.newaxis]
 
     def computeEigenFunctions(self):
         # generate matrix with M x-rows
-        XX = (ones([len(self.x), self.M]).T @ diag(self.x)).T
-        argument = 1j * XX @ diag(2 * pi * self.m)
+        XX = (py.ones([len(self.x), self.M]).T @ py.diag(self.x)).T
+        argument = 1j * XX @ py.diag(2 * py.pi * self.m)
         eigenfuncs = []
         for l in range(self.M):
-            eigenf = sum(exp(argument) @ diag(self.Cq[:, l]), axis=1).T
-            eigenf /= sqrt(self.Ns)
+            eigenf = py.sum(py.exp(argument) @ py.diag(
+                self.Cq[:, l]), axis=1).T
+            eigenf /= py.sqrt(self.Ns)
             eigenfuncs.append(eigenf)
         self.eigenfuncs = eigenfuncs
 
     def computePhaseFactor(self):
         # phase got by fourier coefficients due to translation along x-axis
-        phase = diag(exp(-1j * self.angle * 2 * pi / 180 * self.m))
+        phase = py.diag(py.exp(-1j * self.angle * 2 * py.pi / 180 * self.m))
         phaseFactor = []
         for l in range(self.M):
             # Dot product between Bloch function l and shifted one
@@ -99,82 +100,85 @@ class timeEvolutionPhaseShift():
 
     def computeTimeEvolution(self):
         self.computePhaseFactor()
-        self.timePhase = exp(-1j * self.t.T @ self.omegas.T)
+        self.timePhase = py.exp(-1j * self.t.T @ self.omegas.T)
         self.timeEvolution = self.timePhase \
-            @ diag(self.phaseFactor) \
+            @ py.diag(self.phaseFactor) \
             @ self.eigenfuncs
         self.density = abs(self.timeEvolution)**2
 
     def computeMomentumEvolution(self):
-        self.momentumPhase = exp(-1j * 2 * pi * diag(self.x)
-                                 @ ones([len(self.x), len(self.k)])
-                                 @ diag(self.k))
+        self.momentumPhase = py.exp(-1j * 2 * py.pi * py.diag(self.x)
+                                    @ py.ones([len(self.x), len(self.k)])
+                                    @ py.diag(self.k))
         self.momentumEvolution = self.timeEvolution @ self.momentumPhase
         # normalisation of momentum
-        self.momentumEvolution *= self.dx / sqrt(2 * pi)
+        self.momentumEvolution *= self.dx / py.sqrt(2 * py.pi)
         self.momentumDensity = abs(self.momentumEvolution)**2
-        X = array(sum(self.momentumDensity, axis=1)**(-1))[:, newaxis]
+        X = py.array(py.sum(self.momentumDensity, axis=1)**(-1))[:, py.newaxis]
         # normalisation of momentum density
         self.momentumDensity = self.momentumDensity * \
-            concatenate(len(self.k) * [X], axis=1) / self.dk
+            py.concatenate(len(self.k) * [X], axis=1) / self.dk
 
     def plotTimeEvolution(self):
-        fig = figure()
+        fig = py.figure()
         j1 = 1400
         j2 = 1600
-        for j in range(shape(self.t)[1]):
-            plot(self.x[j1: j2], self.density[j, j1:j2], 'b')
-            ylim([0, 0.2])
-            pause(0.01)
+        for j in range(py.shape(self.t)[1]):
+            py.plot(self.x[j1: j2], self.density[j, j1:j2], 'b')
+            py.ylim([0, 0.2])
+            py.pause(0.01)
             fig.clear()
-        show()
+        py.show()
 
     def plotMomentumEvolution(self):
-        figure()
-        imshow(self.momentumDensity, cmap='jet', aspect='auto')
-        colorbar()
-        xlabel('k/kL')
-        ylabel('temps (µs)')
-        show()
+        py.figure()
+        py.imshow(self.momentumDensity, cmap='jet', aspect='auto')
+        py.colorbar()
+        py.xlabel('k/kL')
+        py.ylabel('temps (µs)')
+        py.show()
 
     def plotOrderEvolution(self):
-        figure()
-        for order in arange(-self.ordreMaxPlot, self.ordreMaxPlot, 1):
-            middleK = floor(len(self.k) / 2) + 1
-            subplot(2, 4, order + self.ordreMaxPlot + 1)
-            slice = int(middleK + fix(order / self.ordreMax * middleK))
-            plot(self.t.T / 1e-6 * self.Texp,
-                 self.momentumDensity[:, slice], 'b')
-            title('Ordre ' + str(order))
-            xlabel('time (µs)')
-            ylabel('density')
-        tight_layout()
-        show()
+        py.figure()
+        for order in py.arange(-self.ordreMaxPlot, self.ordreMaxPlot, 1):
+            middleK = py.floor(len(self.k) / 2) + 1
+            py.subplot(2, 4, order + self.ordreMaxPlot + 1)
+            slice = int(middleK + py.fix(order / self.ordreMax * middleK))
+            py.plot(self.t.T / 1e-6 * self.Texp,
+                    self.momentumDensity[:, slice], 'b')
+            py.title('Ordre ' + str(order))
+            py.xlabel('time (µs)')
+            py.ylabel('density')
+        py.tight_layout()
+        py.show()
 
     def plotBandStructure(self,
                           NbandsToPlot=8,
                           typeOfModulation='phase',
                           freq=0,
                           deltaFreq=5e2):
-        fig, ax = subplots()
-        title('depth: ' + str(self.s0) + '\n freq: ' + str(freq) +
-              ' kHz' + '\n modulation: ' + typeOfModulation)
+        fig, ax = py.subplots()
+        py.title('depth: ' + str(self.s0) + '\n freq: ' + str(freq)
+                 + ' kHz' + '\n modulation: ' + typeOfModulation)
         uncertainty = deltaFreq
         bandsIndex = range(NbandsToPlot)
-        l = len(self.q)
+        L = len(self.q)
         for i in bandsIndex:
             bandColor = self.chooseColor(
                 self.bands[i], i + 1, typeOfModulation)
             ax.plot(self.q, self.bands[i], bandColor)
-            ax.annotate(str(i + 1), (self.q[l - 7], self.bands[i][l - 7]))
+            ax.annotate(str(i + 1), (self.q[L - 7], self.bands[i][L - 7]))
             for j in bandsIndex:
                 if j > i:
                     transitions = self.bands[j] - self.bands[i]
-                    for transition, k in zip(transitions, range(len(transitions))):
-                        if(transition > (freq - uncertainty) and transition < (freq + uncertainty)):
-                            ax.arrow(self.q[k], self.bands[i][k], 0, self.bands[j][k] - self.bands[i][k], head_width=0.05,
-                                     head_length=0.1, fc='k', ec='k')
-        show()
+                    for k, transition in enumerate(transitions):
+                        if(transition > (freq - uncertainty)
+                           and transition < (freq + uncertainty)):
+                            ax.arrow(self.q[k], self.bands[i][k], 0,
+                                     self.bands[j][k] - self.bands[i][k],
+                                     head_width=0.05, head_length=0.1, fc='k',
+                                     ec='k')
+        py.show()
 
     def chooseColor(slef, band, bandNumber, typeOfModulation):
         if max(band) < 0:
@@ -201,17 +205,19 @@ class timeEvolutionPhaseShift():
                     return 'r'
 
 
-close('all')
-t = timeEvolutionPhaseShift(s0=10, angle=90, nstep=54, Texp=16.3e-6)
-t.computeBlochFunctions()
-t.computeEigenFunctions()
+if __name__ is '__main__':
 
-t.computeTimeEvolution()
-t.computeMomentumEvolution()
+    py.close('all')
+    t = timeEvolutionPhaseShift(s0=10, angle=90, nstep=54, Texp=16.3e-6)
+    t.computeBlochFunctions()
+    t.computeEigenFunctions()
 
-t.computeBandStructure()
-t.plotBandStructure()
+    t.computeTimeEvolution()
+    t.computeMomentumEvolution()
 
-t.plotMomentumEvolution()
-t.plotOrderEvolution()
-# t.plotTimeEvolution()
+    t.computeBandStructure()
+    t.plotBandStructure()
+
+    t.plotMomentumEvolution()
+    t.plotOrderEvolution()
+    # t.plotTimeEvolution()

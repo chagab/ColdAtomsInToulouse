@@ -1,16 +1,16 @@
-########################################################################
-## Program writen by Gabriel Chatelain at laboratory LCAR in Toulouse ##
-########################################################################
+#######################################################################
+# Program writen by Gabriel Chatelain at laboratory LCAR in Toulouse #
+#######################################################################
 
-from pylab import *
+import pylab as py
 from os import listdir
 from re import search
 from scipy.ndimage.interpolation import rotate
 
 
-ion()
-rc('text', usetex=True)
-rc('font', family='serif')
+py.ion()
+py.rc('text', usetex=True)
+py.rc('font', family='serif')
 
 
 class Treatement(object):
@@ -83,7 +83,7 @@ class Treatement(object):
         AT[AT <= 1] = 1
         NO[NO <= 1] = 1
         # compute the optical density
-        OD = -log(AT / NO)
+        OD = -py.log(AT / NO)
         return OD
 
     def computeAllOD(self, area=(0, 1392, 0, 1040), angle=0):
@@ -126,14 +126,14 @@ class Treatement(object):
             path = self.path + f
             # crop, reshape the image and dispatch it in the correct list
             if f.endswith("_With.tif"):
-                wiAt[i] = array(imread(path))
-                wiAtOffset[i] = array(imread(path))[noiseRow, x0:x1]
+                wiAt[i] = py.array(py.imread(path))
+                wiAtOffset[i] = py.array(py.imread(path))[noiseRow, x0:x1]
             if f.endswith("_NoAt.tif"):
-                noAt[i] = array(imread(path))
-                noAtOffset[i] = array(imread(path))[noiseRow, x0:x1]
+                noAt[i] = py.array(py.imread(path))
+                noAtOffset[i] = py.array(py.imread(path))[noiseRow, x0:x1]
             if f.endswith("_Back.tif"):
-                back[i] = array(imread(path))
-                backOffset[i] = array(imread(path))[noiseRow, x0:x1]
+                back[i] = py.array(py.imread(path))
+                backOffset[i] = py.array(py.imread(path))[noiseRow, x0:x1]
         # filter the doublons from the variable array
         self.variableArray = list(sorted(set(variables)))
         print("Scan done")
@@ -171,13 +171,13 @@ class Treatement(object):
         x0, x1, y0, y1 = area
         for f in files:
             if f.endswith("_With.tif"):
-                wiAt = rotate(array(imread(self.path + f)),
+                wiAt = rotate(py.array(py.imread(self.path + f)),
                               angle)[y0:y1, x0:x1]
             if f.endswith("_NoAt.tif"):
-                noAt = rotate(array(imread(self.path + f)),
+                noAt = rotate(py.array(py.imread(self.path + f)),
                               angle)[y0:y1, x0:x1]
             if f.endswith("_Back.tif"):
-                back = rotate(array(imread(self.path + f)),
+                back = rotate(py.array(py.imread(self.path + f)),
                               angle)[y0:y1, x0:x1]
         OD = self.calcOD(wiAt, noAt, back)
         return OD
@@ -200,17 +200,17 @@ class Treatement(object):
         OD = self.computeFirstOD(area, angle)
         self.setAngle(angle)
         self.setArea(area)
-        figure()
-        imshow(OD, cmap='jet')
+        py.figure()
+        py.imshow(OD, cmap='jet')
         if noise is not None:
             y0, y1 = noise
-            axhline(y=y0, color='red', linestyle='--')
-            axhline(y=y1, color='red', linestyle='--')
+            py.axhline(y=y0, color='red', linestyle='--')
+            py.axhline(y=y1, color='red', linestyle='--')
             self.noise = noise
-        xlabel("momentum")
-        title(theTitle)
-        colorbar()
-        show()
+        py.xlabel("momentum")
+        py.title(theTitle)
+        py.colorbar()
+        py.show()
 
     def findNoisyArea(self):
         """
@@ -224,12 +224,12 @@ class Treatement(object):
         """
         OD = self.computeFirstOD()
         yProfile = sum(OD, axis=1)
-        derivative = gradient(yProfile)
+        derivative = py.gradient(yProfile)
         N = 10
         # because the derivative is usually very noisy, a sliding average is
         # performed in order to smooth the signal. This is done by a
         # convolution with a gate function of size "N".
-        res = convolve(derivative, ones((N,)) / N, mode='valid')
+        res = py.convolve(derivative, py.ones((N,)) / N, mode='valid')
         mean = res.mean()
         # index of the maximum value of the signal.
         i = res.argmax()
@@ -276,12 +276,12 @@ class Treatement(object):
         # the top and bottom bounds by edge detection.
         bestOD = rotate(OD, bestAngle)
         YProfile = sum(bestOD, axis=1)
-        derivative = gradient(YProfile)
+        derivative = py.gradient(YProfile)
         N = 10
         # because the derivative is usually very noisy, a sliding average is
         # performed in order to smooth the signal. This is done by a
         # convolution with a gate function of size "N".
-        res = convolve(derivative, ones((N,)) / N, mode='valid')
+        res = py.convolve(derivative, py.ones((N,)) / N, mode='valid')
         mean = res.mean()
         # index of the maximum value of the signal.
         i = res.argmax()
@@ -302,7 +302,7 @@ class Treatement(object):
         # The horizontal bound are taken to be maximal, but for security, we
         # take an extra 50 pixels.
         x0 = 50
-        x1 = shape(OD)[0] - 50
+        x1 = py.shape(OD)[0] - 50
         self.setAreaOfInterest(area=(x0, x1, y0, y1), angle=bestAngle)
         return bestOD[y0:y1, x0:x1]
 
@@ -358,34 +358,34 @@ class Treatement(object):
             ODArray = self.ODArray
         if index is None:
             # if index is None, we show all the images in a for loop (so we
-            # have to call show() at every iteration)
+            # have to call py.show() at every iteration)
             for OD, var in zip(ODArray, self.variableArray):
-                figure()
-                title(self.variable + " : " + str(var))
-                imshow(OD, cmap='jet')
-                xlabel("momentum")
-                title(self.variable + " : " + str(var))
+                py.figure()
+                py.title(self.variable + " : " + str(var))
+                py.imshow(OD, cmap='jet')
+                py.xlabel("momentum")
+                py.title(self.variable + " : " + str(var))
                 if coords is not None:
                     # if coords is not None, we show the order delimitation
                     for x0x1 in coords:
                         x0, x1 = x0x1
-                        axvline(x=x0, color='red', linestyle='--')
-                        axvline(x=x1, color='red', linestyle='--')
-                colorbar()
-                show()
+                        py.axvline(x=x0, color='red', linestyle='--')
+                        py.axvline(x=x1, color='red', linestyle='--')
+                py.colorbar()
+                py.show()
         else:
             # if index is given we show only the wanted image
-            figure()
-            title(self.variable + " : " + str(self.variableArray[index]))
-            imshow(ODArray[index], cmap='jet')
-            xlabel("momentum")
+            py.figure()
+            py.title(self.variable + " : " + str(self.variableArray[index]))
+            py.imshow(ODArray[index], cmap='jet')
+            py.xlabel("momentum")
             if coords is not None:
                 for x0x1 in coords:
                     x0, x1 = x0x1
-                    axvline(x=x0, color='red', linestyle='--')
-                    axvline(x=x1, color='red', linestyle='--')
-            colorbar()
-            show()
+                    py.axvline(x=x0, color='red', linestyle='--')
+                    py.axvline(x=x1, color='red', linestyle='--')
+            py.colorbar()
+            py.show()
 
     def plotAllODAtOnce(self, coords=None, save=True):
         """
@@ -397,19 +397,19 @@ class Treatement(object):
 
         Show all optical density images in one image by
         concatenating them."""
-        fig = figure()
-        all = concatenate(self.ODArrayCroped, axis=0)
-        imshow(all, cmap='jet', aspect=(2 / 10))
+        fig = py.figure()
+        all = py.concatenate(self.ODArrayCroped, axis=0)
+        py.imshow(all, cmap='jet', aspect=(2 / 10))
         if coords is not None:
             self.setOrdes(coords)
             for x0x1 in self.coords:
                 x0, x1 = x0x1
-                axvline(x=x0, color='red', linestyle='--')
-                axvline(x=x1, color='red', linestyle='--')
-        xlabel("momentum")
-        ylabel(self.variable)
-        colorbar()
-        show()
+                py.axvline(x=x0, color='red', linestyle='--')
+                py.axvline(x=x1, color='red', linestyle='--')
+        py.xlabel("momentum")
+        py.ylabel(self.variable)
+        py.colorbar()
+        py.show()
         if save is True:
             fig.savefig('allODAtOnce.svg', format='svg')
 
@@ -446,31 +446,31 @@ class Treatement(object):
         if index is None:
             # if no index is given, all the profiles are plotted ...
             for profile, var in zip(self.profileArray, self.variableArray):
-                figure()
-                title(self.variable + " : " + str(var))
-                xlabel("momentum")
-                ylabel("Optical denisty")
-                xticks(range(len(self.variableArray)), self.variableArray)
-                plot(profile, 'b')
+                py.figure()
+                py.title(self.variable + " : " + str(var))
+                py.xlabel("momentum")
+                py.ylabel("Optical denisty")
+                py.xticks(range(len(self.variableArray)), self.variableArray)
+                py.plot(profile, 'b')
                 if coords is not None:
                     for x0x1 in coords:
                         x0, x1 = x0x1
-                        axvline(x=x0, color='red', linestyle='--')
-                        axvline(x=x1, color='red', linestyle='--')
-                show()
+                        py.axvline(x=x0, color='red', linestyle='--')
+                        py.axvline(x=x1, color='red', linestyle='--')
+                py.show()
         else:
             # ... otherwise, the profile with the given index is plotted.
-            figure()
-            title(self.variable + " : " + str(self.variableArray[index]))
-            xlabel("momentum")
-            ylabel("Optical denisty")
-            plot(self.profileArray[index], 'b')
+            py.figure()
+            py.title(self.variable + " : " + str(self.variableArray[index]))
+            py.xlabel("momentum")
+            py.ylabel("Optical denisty")
+            py.plot(self.profileArray[index], 'b')
             if coords is not None:
                 for x0x1 in coords:
                     x0, x1 = x0x1
-                    axvline(x=x0, color='red', linestyle='--')
-                    axvline(x=x1, color='red', linestyle='--')
-            show()
+                    py.axvline(x=x0, color='red', linestyle='--')
+                    py.axvline(x=x1, color='red', linestyle='--')
+            py.show()
 
     def plotAllProfileAtOnce(self, coords=None):
         """
@@ -482,7 +482,7 @@ class Treatement(object):
         Shows all profiles in one image."""
 
         nPlots = len(self.profileArray)
-        fig, axes = subplots(nrows=nPlots, ncols=1, sharex=True)
+        fig, axes = py.subplots(nrows=nPlots, ncols=1, sharex=True)
         fig.text(0.5, 0.04, 'common X', ha='center')
         fig.text(0.04, 0.5, 'common Y', va='center', rotation='vertical')
         for ax, i in zip(axes, range(nPlots)):
@@ -490,12 +490,12 @@ class Treatement(object):
             if coords is not None:
                 for x0x1 in coords:
                     x0, x1 = x0x1
-                    axvline(x=x0, color='red', linestyle='--')
-                    axvline(x=x1, color='red', linestyle='--')
-        xlabel("momentum")
-        ylabel("Optical denisty")
-        xticks(range(len(self.variableArray)), self.variableArray)
-        show()
+                    py.axvline(x=x0, color='red', linestyle='--')
+                    py.axvline(x=x1, color='red', linestyle='--')
+        py.xlabel("momentum")
+        py.ylabel("Optical denisty")
+        py.xticks(range(len(self.variableArray)), self.variableArray)
+        py.show()
 
     def computeEvolutionOfOrder(self):
         """
@@ -531,13 +531,13 @@ class Treatement(object):
 
         Used to plot the evolution of a specific order.
         """
-        figure()
-        title("Order " + str(index))
-        plot(self.orders[index], 'b+--')
-        xlabel(self.variable)
-        ylabel("Normalized denisty")
-        xticks(range(len(self.variableArray)), self.variableArray)
-        show()
+        py.figure()
+        py.title("Order " + str(index))
+        py.plot(self.orders[index], 'b+--')
+        py.xlabel(self.variable)
+        py.ylabel("Normalized denisty")
+        py.xticks(range(len(self.variableArray)), self.variableArray)
+        py.show()
 
     def plotAllOrderAtOnce(self, save=True):
         """
@@ -548,22 +548,22 @@ class Treatement(object):
 
         Used to plot the evolution of all order.
         """
-        fig = figure()
+        fig = py.figure()
         # list of axis, index of the axis, number of orders
         ax, axis, n = [], 0, len(self.coords)
         # number of rows of the subplot. The subplot has allways
         nrows = int(n / 4) + 1 * (n % 4 != 0)
         for index, order in self.orders.items():
             if axis is 0:
-                ax.append(subplot(nrows, 4, axis + 1))
+                ax.append(py.subplot(nrows, 4, axis + 1))
             else:
-                ax.append(subplot(nrows, 4, axis + 1,
-                                  sharex=ax[0], sharey=ax[0]))
-            ax[axis].set_title('Order ' + str(index))
-            plot(order, 'b+--')
+                ax.append(py.subplot(nrows, 4, axis + 1,
+                                     sharex=ax[0], sharey=ax[0]))
+            ax[axis].set_py.title('Order ' + str(index))
+            py.plot(order, 'b+--')
             axis += 1
-        xticks(range(len(self.variableArray)), self.variableArray)
-        tight_layout()
-        show()
+        py.xticks(range(len(self.variableArray)), self.variableArray)
+        py.tight_layout()
+        py.show()
         if save is True:
             fig.savefig('allOrderAtOnce.svg', format='svg')

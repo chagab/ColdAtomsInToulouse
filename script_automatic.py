@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from Treatement import *
+from Treatement import Treatement
 
 t = Treatement("dphi")
 t.findOrders()

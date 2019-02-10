@@ -1,14 +1,9 @@
-from Treatement_v4 import Treatement
-from pylab import *
-from os import listdir
-from re import search
-from scipy.ndimage.interpolation import rotate
-from scipy.optimize import curve_fit
+from Treatement import Treatement
+import pylab as py
 
-
-ion()
-rc('text', usetex=True)
-rc('font', family='serif')
+py.ion()
+py.rc('text', usetex=True)
+py.rc('font', family='serif')
 
 
 class CAT(Treatement):
@@ -22,7 +17,8 @@ class CAT(Treatement):
 
     def sortPopulationBySign(self):
         N = len(self.variableArray)
-        self.left, self.right, self.zero = zeros(N), zeros(N), zeros(N)
+        self.left, self.right, self.zero = py.zeros(N),
+        py.zeros(N), py.zeros(N)
         for k, v in self.orders.items():
             if k < 0:
                 self.left += v
@@ -32,16 +28,16 @@ class CAT(Treatement):
                 self.zero += v
 
     def plotPopulationBySign(self, save=True):
-        fig = figure()
-        title("Population of signed momentum")
-        xlabel(self.variable)
-        ylabel("Normalized density")
-        xticks(range(len(self.variableArray)), self.variableArray)
-        plot(self.left, 'b+--')
-        plot(self.right, 'r+--')
-        plot(self.zero, 'y+--')
-        legend(['negative momentum', 'positive momentum', 'zero momentum'])
-        show()
+        fig = py.figure()
+        py.title("Population of signed momentum")
+        py.xlabel(self.variable)
+        py.ylabel("Normalized density")
+        py.xticks(range(len(self.variableArray)), self.variableArray)
+        py.plot(self.left, 'b+--')
+        py.plot(self.right, 'r+--')
+        py.plot(self.zero, 'y+--')
+        py.legend(['negative momentum', 'positive momentum', 'zero momentum'])
+        py.show()
         if save is True:
             fig.savefig("populationBySign.svg", formt='svg')
 
@@ -57,14 +53,14 @@ class CAT(Treatement):
                 self.nonTunnel.append(self.right[i])
 
     def plotTunnelPopulation(self, save=True):
-        fig = figure()
-        title("Population oscillations")
-        xlabel(self.variable)
-        ylabel("Normalized density")
-        xticks(range(len(self.variableArray)), self.variableArray)
-        plot(self.tunnel, 'b+--')
-        plot(self.nonTunnel, 'r+--')
-        legend(['Tunneled population', 'Non tunneled population'])
-        show()
+        fig = py.figure()
+        py.title("Population oscillations")
+        py.xlabel(self.variable)
+        py.ylabel("Normalized density")
+        py.xticks(range(len(self.variableArray)), self.variableArray)
+        py.plot(self.tunnel, 'b+--')
+        py.plot(self.nonTunnel, 'r+--')
+        py.legend(['Tunneled population', 'Non tunneled population'])
+        py.show()
         if save is True:
             fig.savefig("tunnelPopulation.svg", formt='svg')

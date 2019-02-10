@@ -1,4 +1,4 @@
-from CAT_v2 import *
+from CAT import CAT
 
 t = CAT("nbrePeriodes")
 t.setNoisyArea(noise=(480, 680))
