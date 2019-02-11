@@ -223,7 +223,7 @@ class Treatement(object):
         detection technique.
         """
         OD = self.computeFirstOD()
-        yProfile = sum(OD, axis=1)
+        yProfile = py.sum(OD, axis=1)
         derivative = py.gradient(yProfile)
         N = 10
         # because the derivative is usually very noisy, a sliding average is
@@ -267,7 +267,7 @@ class Treatement(object):
             # the best angle is the one for wich the maximum peak is reached
             # on the yProfile (integral on the horizontal direction) ...
             image = rotate(OD, angle)
-            yProfile = sum(image, axis=1)
+            yProfile = py.sum(image, axis=1)
             newMax = yProfile.max()
             if newMax > max:
                 max = newMax
@@ -275,7 +275,7 @@ class Treatement(object):
         # ... once found, the resulting OD image is kept and used to find the
         # the top and bottom bounds by edge detection.
         bestOD = rotate(OD, bestAngle)
-        YProfile = sum(bestOD, axis=1)
+        YProfile = py.sum(bestOD, axis=1)
         derivative = py.gradient(YProfile)
         N = 10
         # because the derivative is usually very noisy, a sliding average is
@@ -321,7 +321,7 @@ class Treatement(object):
         user to check if the location is correct.
         """
         OD = self.findAreaOfInterest()
-        xProfile = sum(OD, axis=0)
+        xProfile = py.sum(OD, axis=0)
         max = xProfile.argmax()
         w = width * sep
         orders = {}
@@ -429,9 +429,9 @@ class Treatement(object):
         # keep accumulate previous versions.
         self.profileArray = []
         for OD in self.ODArrayCroped:
-            profile = sum(OD, axis=0)
+            profile = py.sum(OD, axis=0)
             # the profile is normalize by its integral
-            profile /= sum(profile)
+            profile /= py.sum(profile)
             self.profileArray.append(profile)
 
     def plotProfile(self, index=None, coords=None):
@@ -515,7 +515,7 @@ class Treatement(object):
         for profile in self.profileArray:
             for x0x1, i in zip(self.coords, indexesOfOrder):
                 x0, x1 = x0x1[0], x0x1[1]
-                integral = sum(profile[x0:x1])
+                integral = py.sum(profile[x0:x1])
                 self.orders[i].append(integral)
                 normalizeFactor += integral
         # Normalize all the evolution by the total number of atoms
