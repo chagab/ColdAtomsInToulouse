@@ -10,15 +10,29 @@ py.rc('font', family='serif')
 class Oscillations(Treatement):
     """docstring for Oscillations."""
 
+    # array of the value used for the inital guess of th zeroth orders fit.
     guesses = []
+    # array of coefficients returned by the fit of the zeroth order.
     coeffs = []
+    # covrianc matrix returned by the fit of the zeroth order.
     matcov = []
 
     def func(self, t, amp, f, phi, offset):
+        """
+        Argument :
+            - t : 1D array. range of value the function is iterated on.
+            - amp : integer. Amplitude of the cosine.
+            - f : integer. Frequency of the cosine.
+            - phi : integer. Phase of the cosine.
+            - offset : integer. Offset of the cosine.
+        Return :
+            - res : 1D array.
+        Toy function used for the fit of the zeroth orders."""
         # function to fit
         return amp * py.cos(2 * py.pi * f * t + phi) + offset
 
     def fitOscillations(self, harmonics=None):
+        """"""
         t = self.variableArray
         dt = t[1] - t[0]
         data = self.orders[0]

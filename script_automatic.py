@@ -2,4 +2,4 @@
 from Treatement import Treatement
 
 t = Treatement("dphi")
-t.findOrders()
+t.autoTreatement()

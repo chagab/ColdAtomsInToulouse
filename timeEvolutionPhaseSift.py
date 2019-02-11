@@ -140,7 +140,7 @@ class timeEvolutionPhaseShift():
 
     def plotOrderEvolution(self):
         py.figure()
-        for order in py.arange(-self.ordreMaxPlot, self.ordreMaxPlot, 1):
+        for order in py.arange(-self.ordreMaxPlot, self.ordreMaxPlot + 1, 1):
             middleK = py.floor(len(self.k) / 2) + 1
             py.subplot(2, 4, order + self.ordreMaxPlot + 1)
             slice = int(middleK + py.fix(order / self.ordreMax * middleK))
@@ -180,7 +180,7 @@ class timeEvolutionPhaseShift():
                                      ec='k')
         py.show()
 
-    def chooseColor(slef, band, bandNumber, typeOfModulation):
+    def chooseColor(self, band, bandNumber, typeOfModulation):
         if max(band) < 0:
             if typeOfModulation is 'amplitude':
                 if bandNumber % 2 is 0:
@@ -208,7 +208,7 @@ class timeEvolutionPhaseShift():
 if __name__ is '__main__':
 
     py.close('all')
-    t = timeEvolutionPhaseShift(s0=10, angle=90, nstep=54, Texp=16.3e-6)
+    t = timeEvolutionPhaseShift(s0=6, angle=25, nstep=54, Texp=90e-6)
     t.computeBlochFunctions()
     t.computeEigenFunctions()
 

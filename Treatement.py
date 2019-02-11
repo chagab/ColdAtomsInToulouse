@@ -14,7 +14,7 @@ py.rc('font', family='serif')
 
 
 class Treatement(object):
-    """docstring for Treatement."""
+    """Class used to treat an images folder."""
     # The path that points to the images folder.
     path = ''
     # The parameter that is varried during the experiment.
@@ -119,6 +119,7 @@ class Treatement(object):
                 .replace(self.variable, "")
                 .replace("p", ".")
             )
+            # TODO: Here we need to take into account the unit of the variable.
             variables.append(i)
             # set the coordinate of where the noise is
             noiseRow = [i for i in range(
@@ -201,7 +202,8 @@ class Treatement(object):
         self.setAngle(angle)
         self.setArea(area)
         py.figure()
-        py.imshow(OD, cmap='jet')
+        # TODO: here the axis need to be set correctly
+        py.imshow(OD, cmap='jet', aspect='auto')
         if noise is not None:
             y0, y1 = noise
             py.axhline(y=y0, color='red', linestyle='--')
@@ -314,7 +316,7 @@ class Treatement(object):
             - width : float. Width of each order in percentage of the
             separation between the orders.
         Return :
-            - None.
+            - orders : 1D array. The coordinates of each orders.
 
         Tries to find the location of each order. First, it find the AOI.
         Then it compute each OD in order to plot all the OD at once for the
@@ -328,9 +330,7 @@ class Treatement(object):
         for i in range(-int(n / 2), int(n / 2) + 1):
             orders[i] = (int(max - i * sep - w / 2),
                          int(max - i * sep + w / 2))
-        self.computeAllOD()
-        self.computeAllProfile()
-        self.plotAllODAtOnce([v for k, v in orders.items()])
+        return [v for k, v in orders.items()]
 
     def setAreaOfInterest(self, area=(0, 1392, 0, 1040), angle=0):
         """
@@ -362,7 +362,8 @@ class Treatement(object):
             for OD, var in zip(ODArray, self.variableArray):
                 py.figure()
                 py.title(self.variable + " : " + str(var))
-                py.imshow(OD, cmap='jet')
+                # TODO: here the axis need to be set correctly
+                py.imshow(OD, cmap='jet', aspect='auto')
                 py.xlabel("momentum")
                 py.title(self.variable + " : " + str(var))
                 if coords is not None:
@@ -377,7 +378,8 @@ class Treatement(object):
             # if index is given we show only the wanted image
             py.figure()
             py.title(self.variable + " : " + str(self.variableArray[index]))
-            py.imshow(ODArray[index], cmap='jet')
+            # TODO: here the axis need to be set correctly
+            py.imshow(ODArray[index], cmap='jet', aspect='auto')
             py.xlabel("momentum")
             if coords is not None:
                 for x0x1 in coords:
@@ -399,7 +401,8 @@ class Treatement(object):
         concatenating them."""
         fig = py.figure()
         all = py.concatenate(self.ODArrayCroped, axis=0)
-        py.imshow(all, cmap='jet', aspect=(2 / 10))
+        # TODO: here the axis need to be set correctly
+        py.imshow(all, cmap='jet', aspect='auto')
         if coords is not None:
             self.setOrdes(coords)
             for x0x1 in self.coords:
@@ -431,6 +434,7 @@ class Treatement(object):
         for OD in self.ODArrayCroped:
             profile = py.sum(OD, axis=0)
             # the profile is normalize by its integral
+            # FIXME: here the normalization is not done properly
             profile /= py.sum(profile)
             self.profileArray.append(profile)
 
@@ -520,6 +524,7 @@ class Treatement(object):
                 normalizeFactor += integral
         # Normalize all the evolution by the total number of atoms
         for i in indexesOfOrder:
+            # FIXME: here the normalization is not done correctly
             self.orders[i] /= normalizeFactor
 
     def plotOrder(self, index):
@@ -567,3 +572,23 @@ class Treatement(object):
         py.show()
         if save is True:
             fig.savefig('allOrderAtOnce.svg', format='svg')
+
+    def autoTreatement(self, n=9, sep=70, width=0.4):
+        """
+        Argument :
+            - n : integer. Number of orders seen during the experiment.
+            - sep : integer. Separation between each orders.
+            - width : float. Width of each order in percentage of the
+
+        Return :
+            - None.
+
+        Tries to automaticaly treat a folder of tiff images. Arguments are
+        piped to the method "findOrders". Once the methods is finished, all
+        OD and profiles are computed and finally all OD are plotted with
+        the orders found.
+        """
+        orders = self.findOrders(n, sep, width)
+        self.computeAllOD()
+        self.computeAllProfile()
+        self.plotAllODAtOnce(orders)
