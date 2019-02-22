@@ -1,6 +1,8 @@
 from Treatement import Treatement
 import pylab as py
 from scipy.optimize import curve_fit
+from timeEvolutionPhaseSift import TimeEvolutionPhaseShift
+
 
 py.ion()
 py.rc('text', usetex=True)
@@ -64,3 +66,14 @@ class Oscillations(Treatement):
         if plotGuess:
             py.plot(t_precise, self.func(t_precise, *self.guesses), 'g--')
         py.show()
+
+    def compareToTheory(self):
+        # TODO: give the depth found by the fit as argument
+        self.evoTheory = TimeEvolutionPhaseShift(
+            s0=6, angle=25, nstep=54, Texp=120e-6)
+        self.evoTheory.computeBlochFunctions()
+        self.evoTheory.computeEigenFunctions()
+        self.evoTheory.computeTimeEvolution()
+        self.evoTheory.computeMomentumEvolution()
+        self.evoTheory.plotMomentumEvolution()
+        self.evoTheory.plotOrderEvolution()

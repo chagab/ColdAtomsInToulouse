@@ -112,7 +112,7 @@ class Treatement(object):
         print("Begin scan")
         for f in listdir(self.path):
             # get the variable that is varaied
-            i = int(  # convert the result to an integer
+            i = float(  # convert the result to an integer
                 # extract the value of the variable with regular expression
                 search(self.variable + "([0-9p]+)", f)
                 .group()
@@ -202,8 +202,7 @@ class Treatement(object):
         self.setAngle(angle)
         self.setArea(area)
         py.figure()
-        # TODO: here the axis need to be set correctly
-        py.imshow(OD, cmap='jet', aspect='auto')
+        py.imshow(OD, cmap='jet', aspect='auto', origin='lower')
         if noise is not None:
             y0, y1 = noise
             py.axhline(y=y0, color='red', linestyle='--')
@@ -362,8 +361,7 @@ class Treatement(object):
             for OD, var in zip(ODArray, self.variableArray):
                 py.figure()
                 py.title(self.variable + " : " + str(var))
-                # TODO: here the axis need to be set correctly
-                py.imshow(OD, cmap='jet', aspect='auto')
+                py.imshow(OD, cmap='jet', aspect='auto', origin='lower')
                 py.xlabel("momentum")
                 py.title(self.variable + " : " + str(var))
                 if coords is not None:
@@ -378,8 +376,8 @@ class Treatement(object):
             # if index is given we show only the wanted image
             py.figure()
             py.title(self.variable + " : " + str(self.variableArray[index]))
-            # TODO: here the axis need to be set correctly
-            py.imshow(ODArray[index], cmap='jet', aspect='auto')
+            py.imshow(ODArray[index], cmap='jet',
+                      aspect='auto', origin='lower')
             py.xlabel("momentum")
             if coords is not None:
                 for x0x1 in coords:
@@ -401,8 +399,13 @@ class Treatement(object):
         concatenating them."""
         fig = py.figure()
         all = py.concatenate(self.ODArrayCroped, axis=0)
-        # TODO: here the axis need to be set correctly
-        py.imshow(all, cmap='jet', aspect='auto')
+        py.imshow(all, cmap='jet', aspect='auto', origin='upper')
+        # here the axis are set correctly (with the correct units and axis)
+        height, width = py.shape(self.ODArrayCroped[0])
+        # locs are the position at which the label of the images are set
+        locs = [i * height + height / 2
+                for i in range(len(self.ODArrayCroped))]
+        py.yticks(locs, self.variableArray)
         if coords is not None:
             self.setOrdes(coords)
             for x0x1 in self.coords:
@@ -433,8 +436,6 @@ class Treatement(object):
         self.profileArray = []
         for OD in self.ODArrayCroped:
             profile = py.sum(OD, axis=0)
-            # the profile is normalize by its integral
-            # FIXME: here the normalization is not done properly
             profile /= py.sum(profile)
             self.profileArray.append(profile)
 
@@ -487,18 +488,19 @@ class Treatement(object):
 
         nPlots = len(self.profileArray)
         fig, axes = py.subplots(nrows=nPlots, ncols=1, sharex=True)
-        fig.text(0.5, 0.04, 'common X', ha='center')
-        fig.text(0.04, 0.5, 'common Y', va='center', rotation='vertical')
-        for ax, i in zip(axes, range(nPlots)):
-            ax.plot(self.profileArray[i])
+        fig.text(0.5, 0.04, "momentum", ha='center')
+        fig.text(0.04, 0.5, "Optical denisty",
+                 va='center', rotation='vertical')
+        for i, ax in enumerate(axes):
+            ax.plot(self.profileArray[i], 'b')
             if coords is not None:
                 for x0x1 in coords:
                     x0, x1 = x0x1
-                    py.axvline(x=x0, color='red', linestyle='--')
-                    py.axvline(x=x1, color='red', linestyle='--')
-        py.xlabel("momentum")
-        py.ylabel("Optical denisty")
-        py.xticks(range(len(self.variableArray)), self.variableArray)
+                    ax.axvline(x=x0, color='red', linestyle='--')
+                    ax.axvline(x=x1, color='red', linestyle='--')
+            ax.set_yticks([])
+            ax.set_frame_on(False)
+            ax.set_ylabel(str(self.variableArray[i]), rotation=0)
         py.show()
 
     def computeEvolutionOfOrder(self):
@@ -515,17 +517,18 @@ class Treatement(object):
         indexesOfOrder = [i - int(n / 2) for i in range(n)]
         self.orders = {i: [] for i in indexesOfOrder}
         # Compute the integral of each order
-        normalizeFactor = 0
+        normalizeArray = []
         for profile in self.profileArray:
+            normalizeFactor = 0
             for x0x1, i in zip(self.coords, indexesOfOrder):
                 x0, x1 = x0x1[0], x0x1[1]
                 integral = py.sum(profile[x0:x1])
                 self.orders[i].append(integral)
                 normalizeFactor += integral
-        # Normalize all the evolution by the total number of atoms
-        for i in indexesOfOrder:
-            # FIXME: here the normalization is not done correctly
-            self.orders[i] /= normalizeFactor
+            normalizeArray.append(normalizeFactor)
+        # Normalize all the orders by the total number of atoms
+        for i, n in zip(indexesOfOrder, normalizeArray):
+            self.orders[i] /= n
 
     def plotOrder(self, index):
         """
@@ -560,14 +563,17 @@ class Treatement(object):
         nrows = int(n / 4) + 1 * (n % 4 != 0)
         for index, order in self.orders.items():
             if axis is 0:
-                ax.append(py.subplot(nrows, 4, axis + 1))
+                ax.append(py.subplot(nrows, 3, axis + 1))
             else:
-                ax.append(py.subplot(nrows, 4, axis + 1,
+                ax.append(py.subplot(nrows, 3, axis + 1,
                                      sharex=ax[0], sharey=ax[0]))
-            ax[axis].set_py.title('Order ' + str(index))
+            ax[axis].set_title('Order ' + str(index))
+            ax[axis].set_xlabel(self.variable)
+            ax[axis].set_ylabel('Population normlisee')
             py.plot(order, 'b+--')
             axis += 1
-        py.xticks(range(len(self.variableArray)), self.variableArray)
+            py.xticks(range(len(self.variableArray)),
+                      self.variableArray, rotation=45)
         py.tight_layout()
         py.show()
         if save is True:

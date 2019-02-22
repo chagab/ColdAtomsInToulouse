@@ -2,7 +2,7 @@ import pylab as py
 py.ion()
 
 
-class timeEvolutionPhaseShift():
+class TimeEvolutionPhaseShift():
     """docstring for timeEvolution."""
 
     # frequency linked to E_L in Hz
@@ -95,7 +95,7 @@ class timeEvolutionPhaseShift():
         phaseFactor = []
         for l in range(self.M):
             # Dot product between Bloch function l and shifted one
-            phaseFactor.append(self.Cq[:, l].T @ phase @ self.Cq[:, 1])
+            phaseFactor.append(self.Cq[:, l].T @ phase @ self.Cq[:, 0])
         self.phaseFactor = phaseFactor
 
     def computeTimeEvolution(self):
@@ -208,7 +208,7 @@ class timeEvolutionPhaseShift():
 if __name__ is '__main__':
 
     py.close('all')
-    t = timeEvolutionPhaseShift(s0=6, angle=25, nstep=54, Texp=90e-6)
+    t = TimeEvolutionPhaseShift(s0=6, angle=25, nstep=54, Texp=120e-6)
     t.computeBlochFunctions()
     t.computeEigenFunctions()
 
