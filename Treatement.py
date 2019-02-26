@@ -110,7 +110,7 @@ class Treatement(object):
         wiAt, noAt, back = {}, {}, {}
         wiAtOffset, noAtOffset, backOffset = {}, {}, {}
         print("Begin scan")
-        for f in listdir(self.path):
+        for f in sorted(listdir(self.path)):
             # get the variable that is varaied
             i = float(  # convert the result to an integer
                 # extract the value of the variable with regular expression
@@ -168,7 +168,7 @@ class Treatement(object):
          _Note_ : the "path" attribute has to be set before calling this
          method. """
         wiAt, noAt, back = [], [], []
-        files = listdir(self.path)[0:4]
+        files = sorted(listdir(self.path))[0:4]
         x0, x1, y0, y1 = area
         for f in files:
             if f.endswith("_With.tif"):
@@ -513,22 +513,23 @@ class Treatement(object):
         Evaluate the population of each order for a given optical density
         image."""
 
+        # number of orders
         n = len(self.coords)
+        # number of values for each order
+        m = len(self.profileArray)
         indexesOfOrder = [i - int(n / 2) for i in range(n)]
-        self.orders = {i: [] for i in indexesOfOrder}
+        self.orders = {i: py.zeros(m) for i in indexesOfOrder}
         # Compute the integral of each order
-        normalizeArray = []
-        for profile in self.profileArray:
+        for j, profile in enumerate(self.profileArray):
             normalizeFactor = 0
             for x0x1, i in zip(self.coords, indexesOfOrder):
                 x0, x1 = x0x1[0], x0x1[1]
-                integral = py.sum(profile[x0:x1])
-                self.orders[i].append(integral)
+                integral = py.sum(profile[x0:x1], axis=0)
+                self.orders[i][j] = integral
                 normalizeFactor += integral
-            normalizeArray.append(normalizeFactor)
-        # Normalize all the orders by the total number of atoms
-        for i, n in zip(indexesOfOrder, normalizeArray):
-            self.orders[i] /= n
+            # normalization for the current profile
+            for i in indexesOfOrder:
+                self.orders[i][j] /= normalizeFactor
 
     def plotOrder(self, index):
         """
@@ -558,23 +559,20 @@ class Treatement(object):
         """
         fig = py.figure()
         # list of axis, index of the axis, number of orders
-        ax, axis, n = [], 0, len(self.coords)
-        # number of rows of the subplot. The subplot has allways
-        nrows = int(n / 4) + 1 * (n % 4 != 0)
-        for index, order in self.orders.items():
+        ax, n = [],  len(self.coords)
+        # number of columns in the subplot
+        ncols = 3
+        # number of rows of the subplot
+        nrows = int(n / ncols) + 1 * (n % ncols != 0)
+        py.tight_layout()
+        for axis, (index, order) in enumerate(self.orders.items()):
             if axis is 0:
-                ax.append(py.subplot(nrows, 3, axis + 1))
+                ax.append(py.subplot(nrows, ncols, axis + 1))
             else:
-                ax.append(py.subplot(nrows, 3, axis + 1,
-                                     sharex=ax[0], sharey=ax[0]))
+                ax.append(py.subplot(nrows, ncols, axis + 1, sharex=ax[0]))
             ax[axis].set_title('Order ' + str(index))
             ax[axis].set_xlabel(self.variable)
-            ax[axis].set_ylabel('Population normlisee')
-            py.plot(order, 'b+--')
-            axis += 1
-            py.xticks(range(len(self.variableArray)),
-                      self.variableArray, rotation=45)
-        py.tight_layout()
+            ax[axis].plot(self.variableArray, order, 'b+--')
         py.show()
         if save is True:
             fig.savefig('allOrderAtOnce.svg', format='svg')
@@ -594,7 +592,12 @@ class Treatement(object):
         OD and profiles are computed and finally all OD are plotted with
         the orders found.
         """
+        # treatement of the data
         orders = self.findOrders(n, sep, width)
+        # compute relevant quantities
         self.computeAllOD()
         self.computeAllProfile()
+        self.computeEvolutionOfOrder()
+        # plot relevant quantities
         self.plotAllODAtOnce(orders)
+        self.plotAllOrderAtOnce()

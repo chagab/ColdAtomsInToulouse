@@ -1,4 +1,15 @@
-from CAT import CAT
+#!/usr/bin/env python3
+import sys
+from pylab import *
+close('all')
+
+
+def CAT(arg):
+    path = '/media/gabriel/MyPassport/theseGab/TraitementData/sources'
+    sys.path.append(path)
+    from CAT import CAT
+    return CAT(arg)
+
 
 t = CAT("nbrePeriodes")
 t.setNoisyArea(noise=(480, 680))
