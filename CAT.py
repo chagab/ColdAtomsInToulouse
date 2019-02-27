@@ -15,10 +15,24 @@ class CAT(Treatement):
     tunnel = []
     nonTunnel = []
 
-    def sortPopulationBySign(self):
-        N = len(self.variableArray)
-        self.left, self.right, self.zero = (py.zeros(N),
-                                            py.zeros(N), py.zeros(N))
+    def sortPopulationByMomentumSign(self):
+        """
+        Argument :
+            - None.
+        Return :
+            - None.
+
+        Fills in two array that correspond to the population with negative
+        momentum (left array) and positive momentum (right array). The sign is
+        given by the position of the excited cloud with respect to the central
+        cloud.
+        """
+        n = len(self.variableArray)
+        self.left, self.right, self.zero = (py.zeros(n),
+                                            py.zeros(n), py.zeros(n))
+        # the iteration is done on each orders where the keys "k" of the dict
+        # "self.orders" give the momentum's sign  of the corresponding
+        # order.
         for k, v in self.orders.items():
             if k < 0:
                 self.left += v
@@ -27,23 +41,46 @@ class CAT(Treatement):
             elif k == 0:
                 self.zero += v
 
-    def plotPopulationBySign(self, save=True):
-        self.sortPopulationBySign()
+    def plotPopulationByMomentumSign(self, save=True):
+        """
+        Argument :
+            - save : boolean. If True, the resulting figure is saved. Default
+            behavior is True.
+        Return :
+            - None.
+
+        Plot the evolution of the population of atoms with respect to it's
+        momentum sign.
+        """
+        self.sortPopulationByMomentumSign()
         fig = py.figure()
         py.title("Population of signed momentum")
         py.xlabel(self.variable)
-        py.ylabel("Normalized density")
-        py.xticks(range(len(self.variableArray)), self.variableArray)
+        py.ylabel("Normalized population")
         py.plot(self.variableArray, self.left, 'b+--')
         py.plot(self.variableArray, self.right, 'r+--')
         py.plot(self.variableArray, self.zero, 'y+--')
-        py.legend(['negative momentum', 'positive momentum', 'zero momentum'])
+        py.legend(['$p<0$', '$p>0$', '$p=0$'])
         py.show()
         if save is True:
-            fig.savefig("populationBySign.svg", formt='svg')
+            fig.savefig("populationByMomentumSign.svg", formt='svg')
 
     def sortTunnelPopulation(self):
-        self.sortPopulationBySign()
+        """
+        Argument :
+            - None.
+        Return :
+            - None.
+
+        Fills in two array that correspond to the population that has tunneled
+        during the experiment or not. To determine wether a cloud of atoms has
+        tunneled or not, the following reasonning is applyied :
+            - On an odd number of periods, non-tunneled have a positive
+            momentum after the phase space rotation.
+            - On an even number of periods, non-tunneled have a negative
+            momentum after the phase space rotation.
+        """
+        self.sortPopulationByMomentumSign()
         self.tunnel = []
         self.nonTunnel = []
         for i, v in enumerate(self.variableArray):
@@ -55,14 +92,23 @@ class CAT(Treatement):
                 self.nonTunnel.append(self.right[i])
 
     def plotTunnelPopulation(self, save=True):
+        """
+        Argument :
+            - save : boolean. If True, the resulting figure is saved. Default
+            behavior is True.
+        Return :
+            - None.
+
+        Plot the evolution of the tunneled and non-tunneled population.
+        """
         self.sortTunnelPopulation()
         fig = py.figure()
         py.title("Population oscillations")
         py.xlabel(self.variable)
-        py.ylabel("Normalized density")
+        py.ylabel("Normalized population")
         py.plot(self.variableArray, self.tunnel, 'b+--')
         py.plot(self.variableArray, self.nonTunnel, 'r+--')
-        py.legend(['Tunneled population', 'Non tunneled population'])
+        py.legend(['Tunneled population', 'Non-tunneled population'])
         py.show()
         if save is True:
             fig.savefig("tunnelPopulation.svg", formt='svg')
