@@ -5,7 +5,7 @@
 import pylab as py
 import json
 from os import listdir
-from re import search
+from re import search, sub
 from scipy.ndimage.interpolation import rotate
 
 
@@ -108,10 +108,15 @@ class Treatement(object):
         variables = []
         wiAt, noAt, back = {}, {}, {}
         wiAtOffset, noAtOffset, backOffset = {}, {}, {}
+        files = sorted(listdir(self.path))
+        # we get the folder name from substituting the end of the first file
+        # by nothing (that is '')
+        self.folderName = sub('_' + self.variable +
+                              '(-*)([0-9A-Za-z._]+)', '', files[0])
         print("Begin scan")
-        for f in sorted(listdir(self.path)):
-            # get the variable that is varaied
-            i = float(  # convert the result to an integer
+        for f in files:
+            # get the variable that is varied
+            i = float(  # convert the result to an float
                 # extract the value of the variable with regular expression
                 search(self.variable + "(-*)([0-9p]+)", f)
                 .group()
@@ -601,7 +606,7 @@ class Treatement(object):
         self.plotAllODAtOnce(orders)
         self.plotAllOrderAtOnce()
 
-    def dump(self, fileName='archive.json', fullOD=False):
+    def dump(self, fileName=None, withOD=True):
         """
         Argument :
             - fileName : string. Name of the dump file
@@ -609,25 +614,40 @@ class Treatement(object):
         Return :
             - None.
 
-        Copies all the attribute from self to a JSON file.
+        Copies all the attribute from this python object to a JSON file.
         """
-        toDump = {}
-        for property, value in vars(self).items():
-            if property != 'ODArray':
-                toDump[property] = value
-
-        print(toDump.keys())
-
         def serialize(o):
+            # function that is used to make sure that self can be expand in
+            # JSON format
             if hasattr(o, '__dict__'):
                 return o.__dict__
             else:
                 return o.tolist()
 
-        with open(fileName, 'w') as fp:
+        toDump = {}
+        keys = list(vars(self).keys())
+        name = (fileName if fileName is not None else self.folderName) + '.json'
+
+        if withOD is False:
+            keys.remove('ODArray')
+            keys.remove('ODArrayCroped')
+
+        for property, value in vars(self).items():
+            toDump[property] = value if property in keys else None
+
+        with open(name, 'w') as fp:
             json.dump(toDump, fp, default=serialize, sort_keys=False, indent=4)
 
     def load(self, dump):
+        """
+        Argument :
+            - dump : string. Name of the dump file
+
+        Return :
+            - None.
+
+        Retrieves all the attribute from a JSON file to a python object.
+        """
         # load the data from a previous dump
         with open(dump, 'r') as fp:
             data = json.load(fp)
