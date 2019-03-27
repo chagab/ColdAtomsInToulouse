@@ -3,6 +3,7 @@
 #######################################################################
 
 import pylab as py
+import json
 from os import listdir
 from re import search
 from scipy.ndimage.interpolation import rotate
@@ -15,31 +16,8 @@ py.rc('font', family='serif')
 
 class Treatement(object):
     """Class used to treat an images folder."""
-    # The path that points to the images folder.
-    path = ''
-    # The parameter that is varried during the experiment.
-    variable = ''
-    # The array that contains the value of the varied parameter.
-    variableArray = []
-    # The array that contains all complet OD images.
-    ODArray = []
-    # The array that contains all croped OD images.
-    ODArrayCroped = []
-    # The array that contains the y-axis integrated OD profile.
-    profileArray = []
-    # The array that contains the coordinate of each order of diffraction.
-    coords = []
-    # The dictionnary that contains the evolution of the order during the
-    # experiment.
-    orders = {}
-    # The tuple that contains the coordinate of the noisy area of
-    # the OD imaages.
-    noise = ()
-    # The array that contains the noisy area (area without the atoms) used to
-    # comute the value of the background.
-    noiseArray = []
 
-    def __init__(self, variable, path="../Images/"):
+    def __init__(self, variable='', path="../Images/"):
         """
         Argument :
             - variable : string. The parameter that is varied during the
@@ -48,8 +26,29 @@ class Treatement(object):
         Return :
             - None
         """
+        # The parameter that is varried during the experiment.
         self.variable = variable
+        # The path that points to the images folder.
         self.path = path
+        # The array that contains the value of the varied parameter.
+        self.variableArray = []
+        # The array that contains all complet OD images.
+        self.ODArray = []
+        # The array that contains all croped OD images.
+        self.ODArrayCroped = []
+        # The array that contains the y-axis integrated OD profile.
+        self.profileArray = []
+        # The array that contains the coordinate of each order of diffraction.
+        self.coords = []
+        # The dictionnary that contains the evolution of the order during the
+        # experiment.
+        self.orders = {}
+        # The tuple that contains the coordinate of the noisy area of
+        # the OD imaages.
+        self.noise = ()
+        # The array that contains the noisy area (area without the atoms) used
+        # to compute the value of the background.
+        self.noiseArray = []
 
     def setAngle(self, angle):
         self.angle = angle
@@ -114,7 +113,7 @@ class Treatement(object):
             # get the variable that is varaied
             i = float(  # convert the result to an integer
                 # extract the value of the variable with regular expression
-                search(self.variable + "([0-9p]+)", f)
+                search(self.variable + "(-*)([0-9p]+)", f)
                 .group()
                 .replace(self.variable, "")
                 .replace("p", ".")
@@ -601,3 +600,37 @@ class Treatement(object):
         # plot relevant quantities
         self.plotAllODAtOnce(orders)
         self.plotAllOrderAtOnce()
+
+    def dump(self, fileName='archive.json', fullOD=False):
+        """
+        Argument :
+            - fileName : string. Name of the dump file
+
+        Return :
+            - None.
+
+        Copies all the attribute from self to a JSON file.
+        """
+        toDump = {}
+        for property, value in vars(self).items():
+            if property != 'ODArray':
+                toDump[property] = value
+
+        print(toDump.keys())
+
+        def serialize(o):
+            if hasattr(o, '__dict__'):
+                return o.__dict__
+            else:
+                return o.tolist()
+
+        with open(fileName, 'w') as fp:
+            json.dump(toDump, fp, default=serialize, sort_keys=False, indent=4)
+
+    def load(self, dump):
+        # load the data from a previous dump
+        with open(dump, 'r') as fp:
+            data = json.load(fp)
+        # initiate object's attributes with dump's values
+        for k, v in data.items():
+            self.__setattr__(k, v)
