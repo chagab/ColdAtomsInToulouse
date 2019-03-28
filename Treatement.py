@@ -606,7 +606,12 @@ class Treatement(object):
         self.plotAllODAtOnce(orders)
         self.plotAllOrderAtOnce()
 
-    def dump(self, fileName=None, withOD=True):
+    def dump(self,
+             fileName=None,
+             withOD=False,
+             withCroppedOD=False,
+             withProfile=False,
+             withNoise=False):
         """
         Argument :
             - fileName : string. Name of the dump file
@@ -630,7 +635,12 @@ class Treatement(object):
 
         if withOD is False:
             keys.remove('ODArray')
+        if withCroppedOD is False:
             keys.remove('ODArrayCroped')
+        if withProfile is False:
+            keys.remove('profileArray')
+        if withNoise is False:
+            keys.remove('noiseArray')
 
         for property, value in vars(self).items():
             toDump[property] = value if property in keys else None

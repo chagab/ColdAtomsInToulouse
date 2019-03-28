@@ -61,6 +61,7 @@ class CAT(Treatement):
         py.plot(self.variableArray, self.right, 'r+--')
         py.plot(self.variableArray, self.zero, 'y+--')
         py.legend(['$p<0$', '$p>0$', '$p=0$'])
+        py.grid()
         py.show()
         if save is True:
             fig.savefig("populationByMomentumSign.svg", formt='svg')
@@ -90,6 +91,8 @@ class CAT(Treatement):
             if v % 2 == 1:
                 self.tunnel.append(self.left[i])
                 self.nonTunnel.append(self.right[i])
+        self.tunnel = py.array(self.tunnel)
+        self.nonTunnel = py.array(self.nonTunnel)
 
     def plotTunnelPopulation(self, save=True):
         """
@@ -106,9 +109,11 @@ class CAT(Treatement):
         py.title("Population oscillations")
         py.xlabel(self.variable)
         py.ylabel("Normalized population")
-        py.plot(self.variableArray, self.tunnel, 'b+--')
-        py.plot(self.variableArray, self.nonTunnel, 'r+--')
+        py.plot(self.variableArray, self.tunnel, 'r+--')
+        py.plot(self.variableArray, self.nonTunnel, 'b+--')
+        py.plot(self.variableArray, self.zero, 'y+--')
         py.legend(['Tunneled population', 'Non-tunneled population'])
+        py.grid()
         py.show()
         if save is True:
             fig.savefig("tunnelPopulation.svg", formt='svg')
