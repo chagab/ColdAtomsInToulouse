@@ -112,8 +112,54 @@ class CAT(Treatement):
         py.plot(self.variableArray, self.tunnel, 'r+--')
         py.plot(self.variableArray, self.nonTunnel, 'b+--')
         py.plot(self.variableArray, self.zero, 'y+--')
-        py.legend(['Tunneled population', 'Non-tunneled population'])
+        py.legend(['Tunneled population', 'Non-tunneled population',
+                   'zeroth-order population'])
         py.grid()
         py.show()
         if save is True:
             fig.savefig("tunnelPopulation.svg", formt='svg')
+
+    def computeMomentumSpreading(self):
+        spreading = []
+        meanPosMomentum = []
+        for i in range(len(self.variableArray)):
+            profile = self.profileArray[i] / max(self.profileArray[i])
+            maxLocation = []
+            maxVal = []
+            for x0x1 in self.coords:
+                x0 = x0x1[0]
+                x1 = x0x1[1]
+                maxLocation.append(x0 + py.argmax(profile[x0:x1]))
+                maxVal.append(max(profile[x0:x1]))
+
+            maxLocation = py.array(maxLocation)
+            maxVal = py.array(maxVal)
+            zeroIndex = int(len(maxLocation) / 2)
+            momemtum = (py.array(range(len(profile))) -
+                        maxLocation[zeroIndex]) / self.h_d_ratio
+            maxLocationMomentum = (py.array(maxLocation)
+                                   - maxLocation[zeroIndex]) / self.h_d_ratio
+            meanPosMomentum.append(
+                py.sum(maxLocationMomentum * maxVal) / py.sum(maxVal))
+            spreading.append(
+                py.sum(maxVal * (maxLocationMomentum - meanPosMomentum[-1])**2))
+        spreading = py.array(spreading)
+        spreading = spreading / max(spreading)
+        self.spreading = spreading
+        self.meanPosMomentum = meanPosMomentum
+
+    def plotMeanMomentum(self):
+        py.figure()
+        py.ylabel('p*')
+        py.xlabel(self.variable)
+        py.plot(self.variableArray, self.meanPosMomentum, 'b+--')
+        py.grid()
+        py.show()
+
+    def plotMomentumSpreading(self):
+        py.figure()
+        py.ylabel('Spreading (arb. units)')
+        py.xlabel(self.variable)
+        py.plot(self.variableArray, self.spreading, 'b+--')
+        py.grid()
+        py.show()

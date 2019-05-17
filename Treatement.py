@@ -17,6 +17,9 @@ py.rc('font', family='serif')
 class Treatement(object):
     """Class used to treat an images folder."""
 
+    h_d_ratio = 71
+    cmap = 'jet'
+
     def __init__(self, variable='', path="../Images/"):
         """
         Argument :
@@ -206,7 +209,7 @@ class Treatement(object):
         self.setAngle(angle)
         self.setArea(area)
         py.figure()
-        py.imshow(OD, cmap='jet', aspect='auto', origin='lower')
+        py.imshow(OD, cmap=self.cmap, aspect='auto', origin='lower')
         if noise is not None:
             y0, y1 = noise
             py.axhline(y=y0, color='red', linestyle='--')
@@ -365,7 +368,7 @@ class Treatement(object):
             for OD, var in zip(ODArray, self.variableArray):
                 py.figure()
                 py.title(self.variable + " : " + str(var))
-                py.imshow(OD, cmap='jet', aspect='auto', origin='lower')
+                py.imshow(OD, cmap=self.cmap, aspect='auto', origin='lower')
                 py.xlabel("momentum")
                 py.title(self.variable + " : " + str(var))
                 if coords is not None:
@@ -380,7 +383,7 @@ class Treatement(object):
             # if index is given we show only the wanted image
             py.figure()
             py.title(self.variable + " : " + str(self.variableArray[index]))
-            py.imshow(ODArray[index], cmap='jet',
+            py.imshow(ODArray[index], cmap=self.cmap,
                       aspect='auto', origin='lower')
             py.xlabel("momentum")
             if coords is not None:
@@ -403,7 +406,7 @@ class Treatement(object):
         concatenating them."""
         fig = py.figure()
         all = py.concatenate(self.ODArrayCroped, axis=0)
-        py.imshow(all, cmap='jet', aspect='auto', origin='upper')
+        py.imshow(all, cmap=self.cmap, aspect='auto', origin='upper')
         # here the axis are set correctly (with the correct units and axis)
         height, width = py.shape(self.ODArrayCroped[0])
         # locs are the position at which the label of the images are set
@@ -481,7 +484,7 @@ class Treatement(object):
                     py.axvline(x=x1, color='red', linestyle='--')
             py.show()
 
-    def plotAllProfileAtOnce(self, coords=None):
+    def plotAllProfileAtOnce(self, coords=None, above=True):
         """
         Argument :
             - coords : 1D array. Coordinates of each orders.
@@ -489,23 +492,41 @@ class Treatement(object):
             - None.
 
         Shows all profiles in one image."""
-
         nPlots = len(self.profileArray)
-        fig, axes = py.subplots(nrows=nPlots, ncols=1, sharex=True)
-        fig.text(0.5, 0.04, "momentum", ha='center')
-        fig.text(0.04, 0.5, "Optical denisty",
-                 va='center', rotation='vertical')
-        for i, ax in enumerate(axes):
-            ax.plot(self.profileArray[i], 'b')
+
+        if above is True:
+            py.figure()
+            py.imshow(self.profileArray, cmap=self.cmap, aspect='auto')
+            # locs are the position at which the label of the images are set
+            locs = range(nPlots)
+            py.yticks(locs, self.variableArray)
             if coords is not None:
-                for x0x1 in coords:
+                self.setOrdes(coords)
+                for x0x1 in self.coords:
                     x0, x1 = x0x1
-                    ax.axvline(x=x0, color='red', linestyle='--')
-                    ax.axvline(x=x1, color='red', linestyle='--')
-            ax.set_yticks([])
-            ax.set_frame_on(False)
-            ax.set_ylabel(str(self.variableArray[i]), rotation=0)
-        py.show()
+                    py.axvline(x=x0, color='red', linestyle='--')
+                    py.axvline(x=x1, color='red', linestyle='--')
+            py.xlabel("momentum")
+            py.ylabel(self.variable)
+            py.colorbar()
+            py.show()
+
+        else:
+            fig, axes = py.subplots(nrows=nPlots, ncols=1, sharex=True)
+            fig.text(0.5, 0.04, "momentum", ha='center')
+            fig.text(0.04, 0.5, "Optical denisty",
+                     va='center', rotation='vertical')
+            for i, ax in enumerate(axes):
+                ax.plot(self.profileArray[i], 'b')
+                if coords is not None:
+                    for x0x1 in coords:
+                        x0, x1 = x0x1
+                        ax.axvline(x=x0, color='red', linestyle='--')
+                        ax.axvline(x=x1, color='red', linestyle='--')
+                ax.set_yticks([])
+                ax.set_frame_on(False)
+                ax.set_ylabel(str(self.variableArray[i]), rotation=0)
+            py.show()
 
     def computeEvolutionOfOrder(self):
         """
